@@ -1,5 +1,10 @@
-# MacOS system files
+# Project ignoring files
+mpfshell/
+*.bin
 .DS_Store
+*zc2737_ym2974_yx2821*
+test.csv
+_wifi_info.py
 
 # Byte-compiled / optimized / DLL files
 __pycache__/

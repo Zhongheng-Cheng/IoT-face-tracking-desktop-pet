@@ -65,26 +65,32 @@ class LCD_2inch(object):
     def init(self):
         self.reset()
 
-        self.write_command(0x36)
+        # 设置显示屏的扫描方向
+        self.write_command(0x36) 
         self.write_data(0x00) 
 
+        # 设置像素格式
         self.write_command(0x3A) 
         self.write_data(0x05)
 
+        # 启用扩展命令集
         self.write_command(0x21) 
 
-        self.write_command(0x2A)
+        # 设置 X 轴的窗口位置
+        self.write_command(0x2A) 
         self.write_data(0x00)
         self.write_data(0x00)
         self.write_data(0x01)
         self.write_data(0x3F)
 
-        self.write_command(0x2B)
+        # 设置 Y 轴的窗口位置
+        self.write_command(0x2B) 
         self.write_data(0x00)
         self.write_data(0x00)
         self.write_data(0x00)
         self.write_data(0xEF)
 
+        # 可能涉及到电源管理和其他控制
         self.write_command(0xB2)
         self.write_data(0x0C)
         self.write_data(0x0C)
@@ -117,7 +123,8 @@ class LCD_2inch(object):
         self.write_data(0xA4)
         self.write_data(0xA1)
 
-        self.write_command(0xE0)
+        # 可能是设置 Gamma 校正，用于调整显示颜色的亮度和对比度
+        self.write_command(0xE0) 
         self.write_data(0xD0)
         self.write_data(0x08)
         self.write_data(0x11)
@@ -148,11 +155,15 @@ class LCD_2inch(object):
         self.write_data(0x14)
         self.write_data(0x2F)
         self.write_data(0x31)
-        self.write_command(0x21)
 
-        self.write_command(0x11)
+        # 可能是禁用扩展命令集
+        self.write_command(0x21) 
 
-        self.write_command(0x29)
+        # 退出睡眠状态
+        self.write_command(0x11) 
+
+        # 启动显示
+        self.write_command(0x29) 
         return
     
     def set_window(self, x_start, y_start, x_end, y_end):
@@ -170,7 +181,6 @@ class LCD_2inch(object):
 
         self.write_command(0x2C) # 开始写入像素数据
         
-    
     def clear(self):
         buffer = [0xff] * (self.width * self.height * 2)
         self.set_window(0, 0, self.height, self.width)

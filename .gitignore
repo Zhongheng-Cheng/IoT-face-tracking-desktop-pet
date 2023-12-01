@@ -1,4 +1,5 @@
 # Project ignoring files
+*.jpg
 mpfshell/
 *.bin
 .DS_Store

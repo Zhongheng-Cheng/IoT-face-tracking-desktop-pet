@@ -4,7 +4,7 @@ mpfshell/
 *.bin
 .DS_Store
 *zc2737_ym2974_yx2821*
-test.csv
+*.csv
 _wifi_info.py
 firmware_test/
 

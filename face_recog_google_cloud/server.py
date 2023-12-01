@@ -1,9 +1,7 @@
 from socket import *
 
 def receive_data_once():
-    message = ''
-    while '\n' not in message:
-        message = connectionSocket.recv(1024).decode()
+    message = connectionSocket.recv(1024)
     return message
 
 def send_data(message):
@@ -21,7 +19,9 @@ print("Connection established with ", clientAddress)
 while True:
     try:
         message = receive_data_once()
+        print("Received...")
         print(message)
+        print("===============================")
     except KeyboardInterrupt:
         print("The server is ready to receive")
         connectionSocket, clientAddress = serverSocket.accept()

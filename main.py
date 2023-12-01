@@ -255,16 +255,14 @@
 #     smart_watch_work()
 
 
-from servo import Servo
-buttom_servo = Servo(pin=14, static_err=-8)
-upper_servo = Servo(pin=12)
-while True:
-    degree = int(input("degree = "))
-    buttom_servo.set_pwm(degree)
-    upper_servo.set_pwm(90)
+# from servo import Servo
+# buttom_servo = Servo(pin=14, static_err=-8)
+# upper_servo = Servo(pin=12)
+# while True:
+#     degree = int(input("degree = "))
+#     buttom_servo.set_pwm(degree)
+#     upper_servo.set_pwm(90)
 
-# from networks import NetworkConn
-# network_conn = NetworkConn()
 
 # from display import ST7789_Controller
 # display = ST7789_Controller(CS_PIN=13, 
@@ -278,3 +276,12 @@ while True:
 # while True:
 #     sleep(0.1)
 #     print(infra.read())
+
+
+from networks import NetworkConn
+network_conn = NetworkConn()
+
+from microphone import Microphone
+
+mic = Microphone()
+mic.record(seconds=1)

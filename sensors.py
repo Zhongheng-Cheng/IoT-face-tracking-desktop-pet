@@ -72,3 +72,14 @@ class Accelerometer(object):
         if num > 32767:
             num -= 65536
         return num
+
+class InfraredSensor(object):
+    def __init__(self, pin: int):
+        self.pin = Pin(pin, Pin.IN)
+        return
+    
+    def is_detect(self):
+        if self.pin.value() == 0:
+            return True
+        else:
+            return False

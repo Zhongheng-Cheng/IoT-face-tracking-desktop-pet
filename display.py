@@ -21,6 +21,53 @@ class OLED(object):
         self.display.show()
         return
 
+class ST7789_Controller(object):
+    def __init__(self, CS_PIN, DC_PIN, RST_PIN=None, BL_PIN=None):
+        '''
+        Unfinished
+        '''
+        import mip
+        mip.install('micropython-st7789')
+
+        import st7789
+        # # 定义SPI引脚
+        # spi = SPI(1, baudrate=20000000, sck=Pin(14), mosi=Pin(13))
+
+        # # 定义显示屏引脚
+        # display = st7789.ST7789(spi, 240, 320, cs=Pin(15), dc=Pin(2), backlight=Pin(12), reset=Pin(0))
+
+        '''
+        ESP8266 - LCD 2inch module
+        GPIO 12 (MISO) - None
+        GPIO 13 (MOSI) - DIN
+        GPIO 14 (SCK) - CLK
+        '''
+        self.spi = SPI(1, baudrate=40000000, polarity=1, phase=1)
+        self.cs = Pin(CS_PIN, Pin.OUT)
+        self.dc = Pin(DC_PIN, Pin.OUT)
+        self.rst = Pin(RST_PIN, Pin.OUT)
+        self.bl = Pin(BL_PIN, Pin.OUT)
+        self.width = 240
+        self.height = 320
+        self.display = st7789.ST7789(self.spi, self.width, self.height, self.cs, self.dc, self.bl, self.rst)
+        
+        return
+    
+    def test(self):
+        # 清除显示屏
+        self.display.fill(0)
+
+        # 设置文字颜色
+        font_color = st7789.color565(255, 255, 255)
+
+        # 显示文字
+        self.display.text("Hello, world", 20, 20, font_color)
+
+        # 更新显示
+        self.display.show()
+        return
+
+
 class LCD_2inch(object):
     def __init__(self, CS_PIN, DC_PIN, RST_PIN=None, BL_PIN=None):
         '''
@@ -180,6 +227,9 @@ class LCD_2inch(object):
         self.write_data((y_end - 1) & 0xff) # 发送 Y 结束坐标的低8位
 
         self.write_command(0x2C) # 开始写入像素数据
+    
+    def show_image(self, Image, x_start=0, y_start=0):
+        pass
         
     def clear(self):
         buffer = [0xff] * (self.width * self.height * 2)

@@ -20,6 +20,7 @@ def receive_image():
         data = receive_data_once()
         if data.startswith(SOI):
             image_bytes = b''
+        image_bytes += data
         if data.endswith(EOI):
             break
     return image_bytes
@@ -37,16 +38,17 @@ serverPort = int(input("Server port: "))
 serverSocket = socket(AF_INET, SOCK_STREAM)
 serverSocket.bind(('', serverPort))
 serverSocket.listen(1)
+serverSocket.settimeout(5)
 print("The server is ready to receive")
 connectionSocket, clientAddress = serverSocket.accept()
 print("Connection established with ", clientAddress)
 while True:
     try:
         image_bytes = receive_image()
-        print("Received...")
-        print(image_bytes)
+        rebuild_image(image_bytes)
         print("===============================")
     except Exception as e:
+        print(e)
         print("The server is ready to receive")
         connectionSocket, clientAddress = serverSocket.accept()
         print("Connection established with ", clientAddress)

@@ -4,13 +4,18 @@ def receive_data_once():
     with open(csv_path, 'w') as fo:
         fo.seek(0)
         fo.truncate()
-    message = ''
+    message = b''
     # while b'\n' not in message:
     while True:
-        message = connectionSocket.recv(1024)
-        for i in message[:5]:
-            print(i)
-        print("=====================")
+        message = connectionSocket.recv(2)
+        if message != b'\n':
+            data_high8 = int(message[0])
+            data_low8 = int(message[1])
+            data = (data_high8 << 8) + data_low8
+            print(data)
+            print("=====================")
+        else:
+            return
         # with open(csv_path, 'a') as fo:
         #     fo.write(message)
 

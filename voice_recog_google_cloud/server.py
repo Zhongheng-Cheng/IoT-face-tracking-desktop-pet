@@ -5,7 +5,6 @@ def receive_data_once():
         fo.seek(0)
         fo.truncate()
     message = ''
-
     # while b'\n' not in message:
     while True:
         message = connectionSocket.recv(1024)

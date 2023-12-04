@@ -2,6 +2,7 @@ import network
 from urequests import get, post
 from ujson import loads
 from os import listdir
+from socket import *
 
 class NetworkConn(object):
     def __init__(self):
@@ -38,6 +39,12 @@ class NetworkConn(object):
                     return
         print('network config:', self.wlan.ifconfig())
         self.ip = self.wlan.ifconfig()[0] # IP address, subnet mask, gateway and DNS server
+        return
+    
+    def connect_to_server(self, server_name, server_port):
+        self.clientSocket = socket(AF_INET, SOCK_STREAM)
+        self.clientSocket.connect((server_name, server_port))
+        print("Successfully connected")
         return
 
 class API(object):

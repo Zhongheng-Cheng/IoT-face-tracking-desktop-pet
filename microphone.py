@@ -15,14 +15,15 @@ class Microphone(object):
         for i in range(seconds):
             for j in range(freq):
                 sample = self.adc.read() # adc.read() returns 10 bits
-                data.append
+                data.append(sample)
+            print(data)
+            del data
+            data = array('h', [])
+        # for i in range(10):
+        #     data.append(i)
+        # print(data)
         check1 = time_ns() - start_time
-        print(sample)
-        print("=========================sample rate: ", seconds * freq / check1 * 1e9)
+        
+        print("sample")
+        print(seconds * freq / check1 * 1e9)
         return
-
-    # def serverConnection(self):
-    #     self.clientSocket = socket(AF_INET, SOCK_STREAM)
-    #     self.clientSocket.connect((SERVER_NAME, SERVER_PORT))
-    #     print("Successfully connected")
-    #     return

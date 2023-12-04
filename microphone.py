@@ -1,10 +1,10 @@
 from machine import ADC
 from utime import sleep
 from socket import *
-import gc
+# import gc
 
 SERVER_NAME = "192.168.1.158"
-SERVER_PORT = 8011
+SERVER_PORT = int(input("SERVER_PORT: "))
 
 class Microphone(object):
     def __init__(self):
@@ -13,21 +13,29 @@ class Microphone(object):
         return
     
     def record(self, seconds=5, depth=16, freq=8000):
-        for _ in range(seconds):
-            self.wave_data = ''
+        for i in range(seconds):
+            # wave_data = ''
+            wave_data = bytearray()
 
-            # send data every half-second
-            for i in range(seconds * 8):
-                for j in range(freq / 8):
-                    sample = self.adc.read() * 2 ** (depth - 10) # adc.read() returns 10 bits
-                    self.wave_data += str(sample) + ' '
-                    sleep(1 / freq)
-                self.clientSocket.send(self.wave_data.encode())
-                # print(self.wave_data)
-                print("=========================")
-                self.wave_data = ''
-                gc.collect()
+            for j in range(freq):
+                sample = self.adc.read() # adc.read() returns 10 bits
+                high_8bits = sample >> 2
+                high_8bits = high_8bits | 0xf0
+                low_8bits = sample & 0xff
+                wave_data.append(high_8bits)
+                wave_data.append(low_8bits)
+                sleep(1 / freq)
+            self.clientSocket.sendall(wave_data)
+            # print(self.wave_data)
+            print("=========================")
+            
+            # del wave_data
+            # wave_data = ''
+            # gc.collect()
+        self.clientSocket.send(b'\n')
         return
+
+
 
     def serverConnection(self):
         self.clientSocket = socket(AF_INET, SOCK_STREAM)

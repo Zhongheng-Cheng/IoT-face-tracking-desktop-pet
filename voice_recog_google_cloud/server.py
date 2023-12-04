@@ -5,10 +5,15 @@ def receive_data_once():
         fo.seek(0)
         fo.truncate()
     message = ''
-    while '\n' not in message:
-        message = connectionSocket.recv(1024).decode()
-        with open(csv_path, 'a') as fo:
-            fo.write(message)
+
+    # while b'\n' not in message:
+    while True:
+        message = connectionSocket.recv(1024)
+        for i in message[:5]:
+            print(i)
+        print("=====================")
+        # with open(csv_path, 'a') as fo:
+        #     fo.write(message)
 
 def send_data(message):
     connectionSocket.send(message.encode())

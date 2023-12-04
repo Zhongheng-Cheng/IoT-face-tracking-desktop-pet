@@ -31,6 +31,7 @@ def rebuild_image(jpeg_bytes, path='downloaded_image.jpg'):
     from io import BytesIO
     image_stream = BytesIO(jpeg_bytes)
     image = Image.open(image_stream).rotate(180)
+    image.save("PIL_image.jpg")
     return image
 
 def convert_pil_to_cv2(pil_image):
@@ -95,6 +96,10 @@ def face_detect(image):
             cv2.imwrite('cv2_image.jpg', image)
     return startX, startY, endX, endY
 
+def find_center(face_location):
+    startX, startY, endX, endY = face_location
+    return [int((startX + endX) / 2), int((startY + endY) / 2)]
+
 
 serverPort = int(input("Server port: "))
 serverSocket = socket(AF_INET, SOCK_STREAM)
@@ -110,6 +115,7 @@ while True:
         cv2_image = convert_pil_to_cv2(pil_image)
         face_location = face_detect(cv2_image)
         print(face_location)
+        print(find_center(face_location))
         print("===============================")
     except Exception as e:
         print(e)

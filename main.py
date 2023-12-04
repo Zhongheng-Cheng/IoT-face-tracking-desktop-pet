@@ -278,10 +278,10 @@
 #     print(infra.read())
 
 
-from networks import NetworkConn
-network_conn = NetworkConn()
+# from networks import NetworkConn
+# network_conn = NetworkConn()
 
 from microphone import Microphone
 
 mic = Microphone()
-mic.record(seconds=1)
+mic.record(seconds=5)

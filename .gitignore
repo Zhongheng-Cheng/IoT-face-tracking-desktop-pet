@@ -1,4 +1,5 @@
 # Project ignoring files
+*.wav
 *.jpg
 mpfshell/
 *.bin

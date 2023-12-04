@@ -30,7 +30,7 @@ def rebuild_image(jpeg_bytes, path='downloaded_image.jpg'):
     from PIL import Image
     from io import BytesIO
     image_stream = BytesIO(jpeg_bytes)
-    image = Image.open(image_stream).rotate(180)
+    image = Image.open(image_stream)
     image.save("PIL_image.jpg")
     return image
 
@@ -100,6 +100,13 @@ def find_center(face_location):
     startX, startY, endX, endY = face_location
     return [int((startX + endX) / 2), int((startY + endY) / 2)]
 
+serverPort2 = int(input("Servo chip's port: "))
+serverSocket2 = socket(AF_INET, SOCK_STREAM)
+serverSocket2.bind(('', serverPort2))
+serverSocket2.listen(1)
+print("The server is ready to receive")
+connectionSocket2, clientAddress2 = serverSocket2.accept()
+print("Connection established with ", clientAddress2)
 
 serverPort = int(input("Server port: "))
 serverSocket = socket(AF_INET, SOCK_STREAM)
@@ -108,14 +115,16 @@ serverSocket.listen(1)
 print("The server is ready to receive")
 connectionSocket, clientAddress = serverSocket.accept()
 print("Connection established with ", clientAddress)
+
+
 while True:
     try:
         image_bytes = receive_image()
         pil_image = rebuild_image(image_bytes)
         cv2_image = convert_pil_to_cv2(pil_image)
         face_location = face_detect(cv2_image)
-        print(face_location)
-        print(find_center(face_location))
+        center_point = find_center(face_location)
+        connectionSocket2.send(bytearray(center_point))
         print("===============================")
     except Exception as e:
         print(e)

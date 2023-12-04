@@ -1,6 +1,7 @@
 from socket import *
 import wave
 import array
+from serial_reader import SerialReader
 
 def receive_data():
     received_data = []

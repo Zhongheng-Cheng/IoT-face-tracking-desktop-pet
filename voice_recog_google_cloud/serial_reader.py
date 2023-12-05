@@ -2,7 +2,7 @@ import serial
 
 class SerialReader(object):
     def __init__(self):
-        pass
+        self.wave_data = []
 
     def read(self):
         # 打开串口
@@ -10,25 +10,27 @@ class SerialReader(object):
 
         try:
             transmission_flag = False
-            wave_data = []
             while True:
                 # 读取串口数据
                 # data = ser.readline().decode('utf-8').strip()
                 data = ser.readline()
+                # print(data)
 
                 # 处理接收到的数据
-                if data == b'start\r\n':
-                    transmission_flag = True
-                elif transmission_flag:
-                    wave_data.append(data.strip())
-                elif data.startswith(b'==='):
+                if data.startswith(b'sample'):
                     transmission_flag == False
-                    print(data)
+                    sample_rate = ser.readline().strip()
                     break
+                elif transmission_flag:
+                    self.wave_data.append(data)
+                    # print(data)
+                elif b'start' in data:
+                    transmission_flag = True
+                    print("Transmission started")
                 
         except KeyboardInterrupt:
             print("Serial communication terminated by user.")
         finally:
             # 关闭串口
             ser.close()
-            return
+            return self.wave_data, sample_rate

@@ -123,7 +123,7 @@ while True:
         cv2_image = convert_pil_to_cv2(pil_image)
         face_location = face_detect(cv2_image)
         center_point = find_center(face_location)
-        # connectionSocket2.send(bytearray(center_point))
+        connectionSocket2.send(bytearray(center_point))
         print("===============================")
     except Exception as e:
         print(e)

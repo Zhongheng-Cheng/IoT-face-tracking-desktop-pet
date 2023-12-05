@@ -29,4 +29,8 @@ class Servo(object):
         self.pwm.duty(duty)
         return
     
+    def set_delta_degree(self, delta_degree: int):
+        self.set_degree(self.degree + delta_degree)
+        return
+    
     

@@ -5,14 +5,14 @@ SOS = b'\xff\xda' # Start of Scan
 EOI = b'\xff\xd9' # End of Image
 
 def receive_data_once():
-    data = connectionSocket.recv(1024)
+    data, address = serverSocket.recvfrom(100000)
     if not data:
         raise 
     return data
 
-def send_data(message):
-    connectionSocket.send(message.encode())
-    return
+# def send_data(message):
+#     connectionSocket.send(message.encode())
+#     return
 
 def receive_image():
     image_bytes = b''
@@ -100,6 +100,11 @@ def find_center(face_location):
     startX, startY, endX, endY = face_location
     return [int((startX + endX) / 2), int((startY + endY) / 2)]
 
+serverPort = int(input("Server port: "))
+serverSocket = socket(AF_INET, SOCK_DGRAM, 0)
+serverSocket.bind(('0.0.0.0', serverPort))
+print("The server is ready to receive from camera")
+
 serverPort2 = int(input("Servo chip's port: "))
 serverSocket2 = socket(AF_INET, SOCK_STREAM)
 serverSocket2.bind(('', serverPort2))
@@ -108,13 +113,7 @@ print("The server is ready to receive")
 connectionSocket2, clientAddress2 = serverSocket2.accept()
 print("Connection established with ", clientAddress2)
 
-serverPort = int(input("Server port: "))
-serverSocket = socket(AF_INET, SOCK_STREAM)
-serverSocket.bind(('', serverPort))
-serverSocket.listen(1)
-print("The server is ready to receive")
-connectionSocket, clientAddress = serverSocket.accept()
-print("Connection established with ", clientAddress)
+
 
 
 while True:
@@ -128,6 +127,6 @@ while True:
         print("===============================")
     except Exception as e:
         print(e)
-        print("The server is ready to receive")
-        connectionSocket, clientAddress = serverSocket.accept()
-        print("Connection established with ", clientAddress)
+        # print("The server is ready to receive")
+        # connectionSocket, clientAddress = serverSocket.accept()
+        # print("Connection established with ", clientAddress)

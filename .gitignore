@@ -8,6 +8,7 @@ mpfshell/
 *.csv
 _wifi_info.py
 firmware_test/
+LCD_Module_RPI_code/
 
 # Byte-compiled / optimized / DLL files
 __pycache__/

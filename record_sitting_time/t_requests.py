@@ -1,5 +1,4 @@
 import requests
-import json
 
 url = "http://35.232.170.48:8000/sitting-time"
 data = {'start_time': '2021-11-02T12:58:51', 'end_time': '2021-11-02T13:58:51'}

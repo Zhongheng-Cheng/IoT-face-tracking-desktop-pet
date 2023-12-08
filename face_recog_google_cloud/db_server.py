@@ -1,16 +1,18 @@
 import pymongo
 
-mongo_client = pymongo.MongoClient()
-db = mongo_client.testdb
+class DataService(object):
+    def __init__(self):
+        mongo_client = pymongo.MongoClient()
+        self.db = mongo_client.testdb
+        self.collection = self.db.testdb
 
-def db_get():
-    cursor = db.testdb.find()
-    return list(cursor)
+    def db_get(self, query: None):
+        if query:
+            cursor = self.collection.find(query)
+        else:
+            cursor = self.collection.find()
+        return list(cursor)
 
-def db_post(doc: dict):
-    db.testdb.insert_one(doc)
-    return
-
-print(db_post({"name": "cccc", "age": 15}))
-
-print(db_get())
+    def db_post(self, doc: dict):
+        self.collection.insert_one(doc)
+        return

@@ -6,7 +6,7 @@ class DataService(object):
         self.db = mongo_client.testdb
         self.collection = self.db.testdb
 
-    def db_get(self, query: None):
+    def db_get(self, query=None):
         if query:
             cursor = self.collection.find(query)
         else:

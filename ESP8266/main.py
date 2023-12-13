@@ -1,8 +1,14 @@
-from networks import NetworkConn
+from networks import NetworkConn, API
 from servo import Servo
+from display import OLED
+from rtc_clock import RTC_Clock
+import utime
+from urequests import post
 
-SERVER_IP = "34.135.180.148"
-SERVER_PORT = int(input("server port: "))
+SERVER_IP = "34.123.196.184"
+FACE_SERVER_PORT = int(input("Face server port: "))
+DATABASE_SERVER_PORT = int(input("Database server port: "))
+DATABASE_SERVER_URL = f"http://{SERVER_IP}:{DATABASE_SERVER_PORT}/sitting-time"
 
 def trace_center(center_x, center_y, threshold=0):
     if center_x != 0 or center_y != 0:
@@ -27,26 +33,85 @@ def delta_loc_to_degree(delta_loc, threshold=0):
 
     return delta_degree
 
+def make_display_content():
+    time_text = ":".join([str(i) for i in clock.get_now_time()])
+
+    line1 = time_text
+    line2 = 'testline2'
+    line3 = 'testline3'
+
+    content = [
+        [line1, 0, 0, 1],
+        [line2, 0, 10, 1],
+        [line3, 0, 20, 1],
+    ]
+
+    return content
 
 if __name__ == '__main__':
-    network_conn = NetworkConn()
-    network_conn.connect_to_server(SERVER_IP, SERVER_PORT)
+    # init settings
+    nc = NetworkConn()
+    nc.connect_to_server(SERVER_IP, FACE_SERVER_PORT)
+    nc.clientSocket.settimeout(0.1)
 
     buttom_servo = Servo(pin=12, static_err=-8)
     upper_servo = Servo(pin=14, degree_limit=[90, 180])
 
+    screen = OLED(pin_sda=4, pin_scl=5)
+    api = API()
+    hh, mm, ss = api.get_realtime()
+    print(hh, mm, ss)
+    clock = RTC_Clock(hour=hh, minute=mm, second=ss)
+
+    is_sitting = False
+
+    # main working logic
     while True:
-        center = network_conn.clientSocket.recv(2)
-        center_x = int(center[0])
-        center_y = int(center[1])
-        print(f"location: ({center_x}, {center_y})")
-        trace_result = trace_center(center_x, center_y, threshold=30)
-        if trace_result:
-            delta_degree_x, delta_degree_y = trace_result
-            print(f'delta_degree: ({delta_degree_x}, {delta_degree_y})')
-            print()
-            buttom_servo.set_delta_degree(delta_degree_x)
-            upper_servo.set_delta_degree(delta_degree_y)
+        content = make_display_content()
+        screen.show_text(content)
+        utime.sleep_ms(1)
+        # read and process face tracking data
+        try:
+            # get face position data
+            center = nc.clientSocket.recv(2)
+            center_x = int(center[0])
+            center_y = int(center[1])
+            print(f"location: ({center_x}, {center_y})")
+
+            # adjust servos
+            trace_result = trace_center(center_x, center_y, threshold=30)
+            if trace_result:
+                delta_degree_x, delta_degree_y = trace_result
+                print(f'delta_degree: ({delta_degree_x}, {delta_degree_y})')
+                buttom_servo.set_delta_degree(delta_degree_x)
+                upper_servo.set_delta_degree(delta_degree_y)
+                print(f"Buttom_servo degree: {buttom_servo.degree}")
+                print(f'Upper_servo degree: {upper_servo.degree}')
+                print()
+
+                # check sitting state
+                if upper_servo.degree > 120:
+                    if not is_sitting:
+                        is_sitting = True
+                        start_time = '' # clock.get_now_iso_time()
+                else:
+                    if is_sitting:
+                        is_sitting = False
+                        stop_time = '' # clock.get_now_iso_time()
+
+                        # send data to database
+                        # data = {'start_time': '2021-11-02T12:58:51', 'end_time': '2021-11-02T13:58:51'}
+                        data = {'start_time': start_time, 'end_time': stop_time}
+                        print(data)
+                        # response = post(url=DATABASE_SERVER_URL, params=data)
+                        # if response.status_code != 200:
+                        #     print(f"Error: {response.content}")
+                        #     print("Request URL:", response.request.url)
+                        #     print("Request Headers:", response.request.headers)
+                        #     print("Request Body:", response.request.body)
+        except:
+            pass
+        
 
 
 

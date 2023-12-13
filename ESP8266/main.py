@@ -62,9 +62,9 @@ if __name__ == '__main__':
 
     screen = OLED(pin_sda=4, pin_scl=5)
     api = API()
-    hh, mm, ss = api.get_realtime()
-    print(hh, mm, ss)
-    clock = RTC_Clock(hour=hh, minute=mm, second=ss)
+    year, month, day, hh, mm, ss = api.get_full_realtime()
+    print(year, month, day, hh, mm, ss)
+    clock = RTC_Clock(year=year, month=month, day=day, hour=hh, minute=mm, second=ss)
     start_time = None
     stop_time = None
 

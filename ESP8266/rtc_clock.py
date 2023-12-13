@@ -28,6 +28,13 @@ class RTC_Clock(object):
             list: [hour, minute, second]
         '''
         return list(self.rtc.datetime()[4:7])
+    
+    def get_now_iso_time(self) -> str:
+        rtc_time = self.rtc.datetime()
+        iso_time = "{:04d}-{:02d}-{:02d}T{:02d}:{:02d}:{:02d}".format(
+            rtc_time[0], rtc_time[1], rtc_time[2], rtc_time[4], rtc_time[5], rtc_time[6]
+        )
+        return iso_time
 
     def inc_time_element(self, field: str = 'hour'):
         '''

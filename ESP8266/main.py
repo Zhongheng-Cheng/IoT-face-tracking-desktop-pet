@@ -2,6 +2,7 @@ from networks import NetworkConn, API
 from servo import Servo
 from display import OLED
 from rtc_clock import RTC_Clock
+import usocket
 import utime
 from urequests import post
 
@@ -33,12 +34,14 @@ def delta_loc_to_degree(delta_loc, threshold=0):
 
     return delta_degree
 
-def make_display_content():
+def make_display_content(line2=None, line3=None):
     time_text = ":".join([str(i) for i in clock.get_now_time()])
 
     line1 = time_text
-    line2 = 'testline2'
-    line3 = 'testline3'
+    if not line2:
+        line2 = 'testline2'
+    if not line3:
+        line3 = 'testline3'
 
     content = [
         [line1, 0, 0, 1],
@@ -52,7 +55,7 @@ if __name__ == '__main__':
     # init settings
     nc = NetworkConn()
     nc.connect_to_server(SERVER_IP, FACE_SERVER_PORT)
-    nc.clientSocket.settimeout(0.1)
+    # nc.clientSocket.settimeout(0.1)
 
     buttom_servo = Servo(pin=12, static_err=-8)
     upper_servo = Servo(pin=14, degree_limit=[90, 180])
@@ -62,14 +65,14 @@ if __name__ == '__main__':
     hh, mm, ss = api.get_realtime()
     print(hh, mm, ss)
     clock = RTC_Clock(hour=hh, minute=mm, second=ss)
+    start_time = None
+    stop_time = None
 
     is_sitting = False
 
     # main working logic
     while True:
-        content = make_display_content()
-        screen.show_text(content)
-        utime.sleep_ms(1)
+        
         # read and process face tracking data
         try:
             # get face position data
@@ -90,27 +93,36 @@ if __name__ == '__main__':
                 print()
 
                 # check sitting state
-                if upper_servo.degree > 120:
+                if upper_servo.degree < 130:
                     if not is_sitting:
                         is_sitting = True
-                        start_time = '' # clock.get_now_iso_time()
+                        start_time = clock.get_now_iso_time()
+                        content = make_display_content(line2=start_time)
+                        print(content)
+                        screen.show_text(content)
+                        utime.sleep_ms(1)
                 else:
                     if is_sitting:
                         is_sitting = False
-                        stop_time = '' # clock.get_now_iso_time()
+                        stop_time = clock.get_now_iso_time()
 
                         # send data to database
                         # data = {'start_time': '2021-11-02T12:58:51', 'end_time': '2021-11-02T13:58:51'}
                         data = {'start_time': start_time, 'end_time': stop_time}
-                        print(data)
+                        content = make_display_content(line3=stop_time)
+                        print(content)
+                        screen.show_text(content)
+                        utime.sleep_ms(1)
                         # response = post(url=DATABASE_SERVER_URL, params=data)
                         # if response.status_code != 200:
                         #     print(f"Error: {response.content}")
                         #     print("Request URL:", response.request.url)
                         #     print("Request Headers:", response.request.headers)
                         #     print("Request Body:", response.request.body)
-        except:
-            pass
+        # except usocket.timeout:
+        #     pass
+        except Exception as e:
+            print(e)
         
 
 

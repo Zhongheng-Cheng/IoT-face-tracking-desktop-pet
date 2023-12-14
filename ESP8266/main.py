@@ -9,7 +9,6 @@ from urequests import post
 SERVER_IP = "34.123.196.184"
 FACE_SERVER_PORT = int(input("Face server port: "))
 DATABASE_SERVER_PORT = int(input("Database server port: "))
-DATABASE_SERVER_URL = f"http://{SERVER_IP}:{DATABASE_SERVER_PORT}/sitting-time"
 
 def trace_center(center_x, center_y, threshold=0):
     if center_x != 0 or center_y != 0:
@@ -50,6 +49,17 @@ def make_display_content(line2=None, line3=None):
     ]
 
     return content
+
+def post_sitting_data(start_time, end_time):
+    url = f"http://{SERVER_IP}:{DATABASE_SERVER_PORT}/sitting-time?start_time={start_time}&end_time={end_time}"
+    response = post(url)
+    if response.status_code != 200:
+        print(f"Error: {response.content}")
+        print("Request URL:", response.request.url)
+        print("Request Headers:", response.request.headers)
+        print("Request Body:", response.request.body)
+        return response
+    return
 
 if __name__ == '__main__':
     # init settings
@@ -104,21 +114,14 @@ if __name__ == '__main__':
                 else:
                     if is_sitting:
                         is_sitting = False
-                        stop_time = clock.get_now_iso_time()
+                        end_time = clock.get_now_iso_time()
 
                         # send data to database
-                        # data = {'start_time': '2021-11-02T12:58:51', 'end_time': '2021-11-02T13:58:51'}
-                        data = {'start_time': start_time, 'end_time': stop_time}
-                        content = make_display_content(line3=stop_time)
-                        print(content)
+                        post_sitting_data(start_time, end_time)
+                        content = make_display_content(line2=start_time, line3=end_time)
                         screen.show_text(content)
                         utime.sleep_ms(1)
-                        # response = post(url=DATABASE_SERVER_URL, params=data)
-                        # if response.status_code != 200:
-                        #     print(f"Error: {response.content}")
-                        #     print("Request URL:", response.request.url)
-                        #     print("Request Headers:", response.request.headers)
-                        #     print("Request Body:", response.request.body)
+                        
         # except usocket.timeout:
         #     pass
         except Exception as e:

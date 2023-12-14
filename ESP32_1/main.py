@@ -7,6 +7,7 @@ import socket
 import camera
 import machine
 import time
+from sensors import InfraredSensor
 
 SSID = "Columbia University"         # Enter your WiFi name
 PASSWORD = ""    # Enter your WiFi password
@@ -89,12 +90,19 @@ if __name__ == '__main__':
 #     uart.init(4800, bits=8, parity=None, stop=1)  # 初始化UART设置
 #     import ulogging as logging
 #     logging.basicConfig(level=logging.INFO)
+    ir1 = InfraredSensor(13)
+    ir2 = InfraredSensor(14)
+    ir3 = InfraredSensor(15)
+    ir4 = InfraredSensor(2)
+    ir5 = InfraredSensor(0)
+    irs = [ir1, ir2, ir3, ir4, ir5]
     camera_init()
     wifi_connect()
     s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM, 0)
     print("Sending...")
     while True:
         send_frame(s)
+        print([ir.is_detect() for ir in irs])
         # send_frametocomputer()
         utime.sleep(1)
 

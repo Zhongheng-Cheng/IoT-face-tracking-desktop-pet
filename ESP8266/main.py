@@ -126,6 +126,8 @@ if __name__ == '__main__':
         #     pass
         except Exception as e:
             print(e)
+            nc = NetworkConn()
+            nc.connect_to_server(SERVER_IP, FACE_SERVER_PORT)
         
 
 

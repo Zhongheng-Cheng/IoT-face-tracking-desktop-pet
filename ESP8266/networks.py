@@ -175,3 +175,11 @@ class API(object):
         '''
         hour, minute, second = [int(i) for i in self.get_realtime_api()["datetime"][11:19].split(':')]
         return [hour, minute, second]
+    
+    def get_full_realtime(self) -> list:
+        time_text = self.get_realtime_api()["datetime"]
+        year = int(time_text[0:4])
+        month = int(time_text[5:7])
+        day = int(time_text[8:10])
+        hour, minute, second = [int(i) for i in time_text[11:19].split(':')]
+        return [year, month, day, hour, minute, second]

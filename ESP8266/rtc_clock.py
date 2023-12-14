@@ -1,18 +1,15 @@
 from machine import Pin, RTC
 
 class RTC_Clock(object):
-    def __init__(self, hour: int, minute: int, second: int):
+    def __init__(self, year: int, month: int, day: int, hour: int, minute: int, second: int):
         '''
         Initial time setting: hour, minute, second
         Hard-coded fields:
-            year = 2023
-            month = 1
-            day = 1
             weekday = 7
             microsecond = 0
         '''
         self.rtc = RTC()
-        self.rtc.datetime([2023, 1, 1, 7, hour, minute, second, 0])
+        self.rtc.datetime([year, month, day, 7, hour, minute, second, 0])
         self.time_fields = ['year', 'month', 'day', 'weekday', 'hour', 'minute', 'second']
         self.hhmmss_max = [24, 60, 60]
         self.hhmmss_fields = ["hour", "minute", "second"]
@@ -28,6 +25,13 @@ class RTC_Clock(object):
             list: [hour, minute, second]
         '''
         return list(self.rtc.datetime()[4:7])
+    
+    def get_now_iso_time(self) -> str:
+        rtc_time = self.rtc.datetime()
+        iso_time = "{:04d}-{:02d}-{:02d}T{:02d}:{:02d}:{:02d}".format(
+            rtc_time[0], rtc_time[1], rtc_time[2], rtc_time[4], rtc_time[5], rtc_time[6]
+        )
+        return iso_time
 
     def inc_time_element(self, field: str = 'hour'):
         '''

@@ -4,6 +4,8 @@ SOI = b'\xff\xd8' # Start of Image
 SOS = b'\xff\xda' # Start of Scan
 EOI = b'\xff\xd9' # End of Image
 
+CAMERA_PORT = 8011
+
 def receive_data_once():
     data, address = serverSocket.recvfrom(100000)
     if not data:
@@ -100,9 +102,8 @@ def find_center(face_location):
     startX, startY, endX, endY = face_location
     return [int((startX + endX) / 2), int((startY + endY) / 2)]
 
-serverPort = int(input("Server port: "))
 serverSocket = socket(AF_INET, SOCK_DGRAM, 0)
-serverSocket.bind(('0.0.0.0', serverPort))
+serverSocket.bind(('0.0.0.0', CAMERA_PORT))
 print("The server is ready to receive from camera")
 
 serverPort2 = int(input("Servo chip's port: "))
@@ -113,20 +114,19 @@ print("The server is ready to receive")
 connectionSocket2, clientAddress2 = serverSocket2.accept()
 print("Connection established with ", clientAddress2)
 
-
-
-
 while True:
     try:
         image_bytes = receive_image()
+        print("+++")
         pil_image = rebuild_image(image_bytes)
         cv2_image = convert_pil_to_cv2(pil_image)
         face_location = face_detect(cv2_image)
         center_point = find_center(face_location)
         connectionSocket2.send(bytearray(center_point))
-        print("===============================")
+        print("===")
     except Exception as e:
         print(e)
-        # print("The server is ready to receive")
-        # connectionSocket, clientAddress = serverSocket.accept()
-        # print("Connection established with ", clientAddress)
+        connectionSocket2.close()
+        print("The server is ready to receive")
+        connectionSocket2, clientAddress = serverSocket2.accept()
+        print("Connection established with ", clientAddress)

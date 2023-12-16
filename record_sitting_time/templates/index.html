@@ -1,0 +1,97 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sitting Chart</title>
+</head>
+<body>
+    <canvas id="sittingChart" width="21600" height="100" style="border:1px solid #000;"></canvas>
+
+
+    <script>
+
+        const time2ind = (e) => {
+            var hour = parseInt(e.substring(0,2))
+            var min = parseInt(e.substring(3,5))
+            var sec = parseInt(e.substring(6,8))
+            console.log(hour,min,sec)
+
+            return (hour*3600+min*60+sec)/4
+        }
+        // 获取Canvas元素
+        var canvas = document.getElementById("sittingChart");
+        var ctx = canvas.getContext("2d");
+        var widthday = 1;
+        var truepos = 20;
+        var falsepos = 80;
+
+        ctx.lineWidth = 1;
+        ctx.strokeStyle = 'black'
+
+        ctx.font = "4px"
+        ctx.fillStyle = 'black'
+
+        for(var ind = 0 ;ind<21600; ind+=900){
+            ctx.beginPath();
+            ctx.moveTo(ind, 96);
+            ctx.lineTo(ind, 100);
+            ctx.stroke();
+
+            ctx.fillText((ind/900).toString(), ind-2, 90 )
+        }
+
+
+        // 定义坐下时间段（假设每次坐下为两小时）
+        var sittingPeriods = JSON.parse({{ data | tojson }});
+
+        sittingPeriods.sort((a,b)=>{
+            return a.start_time.localeCompare(b.start_time);
+        })
+
+        // 绘制坐下的时间段
+        var lasttime = 0;
+        
+
+        sittingPeriods.forEach((e,i) => {
+            // var startTime = convertTimeToMinutes(period.start_time);
+            // var endTime = convertTimeToMinutes(period.end_time);
+
+            var date = e.end_time.substring(0,10);
+            if(date==='2023-12-13'){
+                var start = e.start_time.substring(11,19)
+                var end = e.end_time.substring(11,19)
+                var startind = time2ind(start)
+                var endind = time2ind(end)
+
+                console.log(startind, endind)
+
+                if(startind>lasttime){
+                    ctx.beginPath();
+                    ctx.moveTo(lasttime, truepos);
+                    ctx.lineTo(lasttime, falsepos)
+                    ctx.lineTo(startind, falsepos);
+                    ctx.lineTo(startind,truepos);
+                    ctx.lineTo(endind, truepos);
+                    ctx.stroke();
+
+                    lasttime = endind;
+                }
+            }
+
+            // ctx.fillStyle = "rgba(0, 255, 0, 0.5)"; // 设置半透明绿色
+            // ctx.fillRect(startTime, 0, endTime - startTime, canvas.height);
+        });
+
+        // 绘制时间轴
+        ctx.beginPath();
+        ctx.moveTo(lasttime, truepos);
+        ctx.lineTo(lasttime, falsepos)
+        ctx.lineTo(21600, falsepos);
+        ctx.stroke();
+
+        // 将 ISO 格式的时间转换为分钟
+        
+    </script>
+</body>
+</html>

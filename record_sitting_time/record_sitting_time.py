@@ -1,8 +1,10 @@
-from fastapi import FastAPI, HTTPException
+from fastapi import FastAPI, HTTPException, Request
 import uvicorn
 from datetime import datetime
 import json
 from bson import ObjectId
+from fastapi.templating import Jinja2Templates
+from fastapi.responses import HTMLResponse
 
 from data_service import DataService
 
@@ -15,12 +17,15 @@ class CustomJSONEncoder(json.JSONEncoder):
         return super().default(obj)
 
 app = FastAPI()
+templates = Jinja2Templates(directory="templates")
 
 data_service = DataService()
 
-@app.get("/")
-async def root():
-    return "Hello World"
+@app.get("/", response_class=HTMLResponse)
+async def root(request: Request):
+    result = data_service.db_get()
+    result = json.dumps(result, cls=CustomJSONEncoder)
+    return templates.TemplateResponse("index.html", {"request": request, "data": result})
 
 @app.get("/sitting-time")
 async def get_sitting_time():

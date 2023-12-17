@@ -4,6 +4,9 @@ from ujson import loads
 from os import listdir
 from socket import *
 
+# from requests import get
+# from json import loads
+
 class NetworkConn(object):
     def __init__(self):
         self.wlan = network.WLAN(network.STA_IF)
@@ -50,6 +53,7 @@ class NetworkConn(object):
 class API(object):
     def __init__(self):
         self.weather_API_key = "f485ffaf9f59c68087e74f169c50068f"
+        self.quote_API_key = "eGE3BW/+7sbstu2WTj932A==LpbbfCm49dQxm9rf"
         self.latitude = self.longitude = None
         return
 
@@ -183,3 +187,23 @@ class API(object):
         day = int(time_text[8:10])
         hour, minute, second = [int(i) for i in time_text[11:19].split(':')]
         return [year, month, day, hour, minute, second]
+
+    def get_quote(self, category: str) -> dict:
+        '''
+        See full possible categories at:
+        https://api-ninjas.com/api/quotes
+
+        Output:
+        {
+            'quote': str,
+            'author': str
+        }
+        '''
+        api_url = 'https://api.api-ninjas.com/v1/quotes?category={}'.format(category)
+        response = get(api_url, headers={'X-Api-Key': self.quote_API_key})
+        if response.status_code == 200:
+            res = loads(response.text)[0]
+            return res
+        else:
+            print("Error:", response.status_code, response.text)
+            return 

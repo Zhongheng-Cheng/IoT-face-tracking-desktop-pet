@@ -4,6 +4,7 @@ from display import OLED
 from rtc_clock import RTC_Clock
 from finite_state_machine import FiniteStateMachine
 from button import Button
+from server import Server
 import usocket
 import utime
 from urequests import post
@@ -48,21 +49,29 @@ def delta_loc_to_degree(delta_loc, threshold=0):
 
     return delta_degree
 
-def make_display_content(line2=None, line3=None):
-    time_text = ":".join([str(i) for i in clock.get_now_time()])
+def make_display_content(state):
+    line1 = line2 = line3 = ''
 
-    line1 = time_text
-    if not line2:
-        line2 = 'testline2'
-    if not line3:
-        line3 = 'testline3'
+    if state == "MAIN":
+        line1 = ":".join([str(i) for i in clock.get_now_time()])
+        line2 = weather_text
+        line3 = ''
+    
+    if state == "SHOW_QUOTE":
+        line1 = quote_get['quote']
+        line2 = ''
+        line3 = quote_get['author']
+    
+    if state == "VOICE_RECOG":
+        line1 = "VOICE_RECOG"
+        line2 = ''
+        line3 = ''
 
     content = [
         [line1, 0, 0, 1],
         [line2, 0, 10, 1],
         [line3, 0, 20, 1],
     ]
-
     return content
 
 def post_sitting_data(start_time, end_time):
@@ -90,14 +99,21 @@ if __name__ == '__main__':
     button = Button(pin=0, release=button_short)
     year, month, day, hh, mm, ss = api.get_full_realtime()
     clock = RTC_Clock(year=year, month=month, day=day, hour=hh, minute=mm, second=ss)
+    server = Server()
+    server.config_listening(8012)
+    
     start_time = None
     stop_time = None
 
     is_sitting = False
 
+    weather_get = api.get_weather()
+    weather_text = weather_get['weather'][0]['main'] + str(weather_get['main']['temp'])
+
     # main working logic
     while True:
         if fsm.current_state == "MAIN" or fsm.current_state == "SHOW_QUOTE":
+            time_text = ":".join([str(i) for i in clock.get_now_time()])
             # read and process face tracking data
             try:
                 # get face position data
@@ -145,5 +161,7 @@ if __name__ == '__main__':
                 nc.connect_to_server(SERVER_IP, FACE_SERVER_PORT)
         
         if fsm.current_state == "VOICE_RECOG":
-            pass
+            voice_message = server.receive_once()
+            print("::: " + voice_message)
+            # voice_result = check_message(voice_message) ###try# voice_result = input()
         

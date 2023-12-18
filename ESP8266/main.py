@@ -2,6 +2,8 @@ from networks import NetworkConn, API
 from servo import Servo
 from display import OLED
 from rtc_clock import RTC_Clock
+from finite_state_machine import FiniteStateMachine
+from button import Button
 import usocket
 import utime
 from urequests import post
@@ -9,6 +11,19 @@ from urequests import post
 SERVER_IP = "34.123.196.184"
 FACE_SERVER_PORT = int(input("Face server port: "))
 DATABASE_SERVER_PORT = int(input("Database server port: "))
+
+def button_short(p):
+    '''
+    Any state except VOICE_RECOG: jump to VOICE_RECOG
+    VOICE_RECOG: jump to MAIN
+    '''
+    if fsm.current_state != "VOICE_RECOG":
+        fsm.jump_to_state("VOICE_RECOG")
+        return
+    
+    if fsm.current_state == "VOICE_RECOG":
+        fsm.jump_to_state("MAIN")
+        return
 
 def trace_center(center_x, center_y, threshold=0):
     if center_x != 0 or center_y != 0:
@@ -69,11 +84,11 @@ if __name__ == '__main__':
 
     buttom_servo = Servo(pin=12, static_err=-8)
     upper_servo = Servo(pin=14, degree_limit=[90, 180])
-
     screen = OLED(pin_sda=4, pin_scl=5)
     api = API()
+    fsm = FiniteStateMachine()
+    button = Button(pin=0, release=button_short)
     year, month, day, hh, mm, ss = api.get_full_realtime()
-    print(year, month, day, hh, mm, ss)
     clock = RTC_Clock(year=year, month=month, day=day, hour=hh, minute=mm, second=ss)
     start_time = None
     stop_time = None

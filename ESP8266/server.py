@@ -27,10 +27,10 @@ class Server(object):
     def receive_once(self):
         try:
             self.listen_to_connection()
-            self.message = self.conn_socket.recv(1024).decode().split('\n')[-1]
+            message = self.conn_socket.recv(1024).decode().split('\n')[-1]
             print("Message received from %s: %s" % (self.client_address, self.message))
             self.conn_socket.close()
-            return self.message
+            return message
         except:
-            return self.message
+            return ''
         

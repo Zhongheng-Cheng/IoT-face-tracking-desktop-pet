@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+<!-- <!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
@@ -102,6 +102,396 @@
             drawdata();
         }
 
+
+        var sittingPeriods = JSON.parse({{ data | tojson }});
+
+        sittingPeriods.sort((a,b)=>{
+            return a.start_time.localeCompare(b.start_time);
+        })
+
+        drawdata();
+
+        
+    </script>
+</body>
+</html> -->
+
+
+
+
+<!-- <!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sitting Chart</title>
+    <script src="https://d3js.org/d3.v5.min.js"></script>
+</head>
+<body>
+    <p id="displaydata">Current date: 2023-12-13</p>
+    <input type="date" id="datepick" name="datepick" style="margin-bottom: 15px;" onchange={handledate(this.value)}>
+    <button onclick={handlerate(4)} >second</button>
+    <button onclick={handlerate(48)}>minute</button>
+    <button onclick={handlerate(144)}>hour</button>
+    <button onclick={handlerate(432)}>day</button>
+    <br>
+    <canvas id="sittingChart" width="21600" height="100" style="border:1px solid #000;"></canvas>
+    <br>
+    <svg id = "pi-char" width="200" style="margin-top: 15px; margin-left: 15px" height="200"></svg>
+
+
+    <script>
+        var chooseDate = '2023-12-13'
+        var canvas = document.getElementById("sittingChart");
+        var ctx = canvas.getContext("2d");
+        var widthday = 1;
+        var truepos = 20;
+        var falsepos = 80;
+
+        var rate = 4;
+
+        const time2ind = (e) => {
+            var hour = parseInt(e.substring(0,2))
+            var min = parseInt(e.substring(3,5))
+            var sec = parseInt(e.substring(6,8))
+            console.log(hour,min,sec)
+
+            return (hour*3600+min*60+sec)/rate
+        }
+
+        const drawdata = () =>{
+            ctx.clearRect(2,truepos-5,canvas.width-4, canvas.height-truepos+10);
+            canvas.width = 21600*4/rate;
+            d3.select("#pi-char").selectAll("*").remove();
+            var svg= d3.select("#pi-char")
+            var sitpi = 0;
+
+            var lasttime = 0;
+            sittingPeriods.forEach((e,i) => {
+                var date = e.end_time.substring(0,10);
+                if(date===chooseDate){
+                    var start = e.start_time.substring(11,19)
+                    var end = e.end_time.substring(11,19)
+                    var startind = time2ind(start)
+                    var endind = time2ind(end)
+                    sitpi += endind-startind;
+                    if(startind>lasttime){
+                        ctx.beginPath();
+                        ctx.moveTo(lasttime, falsepos);
+                        ctx.lineTo(startind, falsepos);
+                        ctx.lineTo(startind, truepos);
+                        ctx.lineTo(endind, truepos);
+                        ctx.lineTo(endind, falsepos)
+                        ctx.stroke();
+                        lasttime = endind;
+                    }
+                }
+            });
+            ctx.beginPath();
+            ctx.moveTo(lasttime, truepos);
+            ctx.lineTo(lasttime, falsepos)
+            ctx.lineTo(21600*4/rate, falsepos);
+            ctx.stroke();
+            
+            console.log(sitpi)
+            sitpi /= 21600*4/rate;
+            pidata = [['sit',sitpi*100], ['stand',100-sitpi*100]]
+
+            var pie = d3.pie().sort(null).value((d)=>{
+                return d[1]
+            })
+            var pieall = pie(pidata)
+            console.log(pieall)
+
+            var outerRadius = 200/ 2;
+            var innerRadius = 80;
+            var arc = d3.arc()
+            .outerRadius(outerRadius)
+            .innerRadius(innerRadius);
+
+            var arcs = svg.selectAll('g')
+              .data(pieall)
+              .enter()
+              .append('g')
+              .attr('transform', 'translate(' + 200 / 2 + ',' + 200 / 2 + ')');
+    
+            var colors = ['red', 'blue'];
+            arcs.append('path')
+                .attr('fill', function(d, i){
+                return colors[i];
+                })
+                .attr('d', function(d){
+                return arc(d);
+                });
+
+            svg.append("rect")  //添加一个矩形
+            .attr("x",60)
+            .attr("y",70)
+            .attr("width",20)
+            .attr("height",20)
+            .attr("fill","red")
+
+            svg.append("rect")  //添加一个矩形
+            .attr("x",60)
+            .attr("y",110)
+            .attr("width",20)
+            .attr("height",20)
+            .attr("fill","blue")
+
+            svg.append('text')
+            .attr("x",90)
+            .attr("y",85)
+            .style('font-weight', 10)
+            .style('font-family', 'Arial')
+            .text("Sitting")
+
+            svg.append('text')
+            .attr("x",90)
+            .attr("y",125)
+            .style('font-weight', 10)
+            .style('font-family', 'Arial')
+            .text("Standing")
+
+        }
+
+        function handledate(e){
+            chooseDate = e.toString();
+            document.getElementById("displaydata").innerText = "Current date: " + chooseDate;
+            drawdata();
+        }
+
+        function handlerate(e){
+            rate = e;
+            drawdata();
+        }
+
+        // var jsonstring = "[{\"_id\": \"657284f46f04c0c1832c0215\", \"start_time\": \"2023-11-02T08:58:51\", \"end_time\": \"2023-11-02T10:58:51\"}, {\"_id\": \"6572851a6f04c0c1832c0216\", \"start_time\": \"2023-11-02T18:58:51\", \"end_time\": \"2023-11-02T20:58:51\"}, {\"_id\": \"657288cb6f04c0c1832c0217\", \"start_time\": \"2023-11-02T12:58:51\", \"end_time\": \"2023-11-02T13:58:51\"}, {\"_id\": \"657290986f04c0c1832c0218\", \"start_time\": \"2022-11-02T12:58:51\", \"end_time\": \"2022-11-02T13:58:51\"}, {\"_id\": \"657342f86f04c0c1832c0219\", \"start_time\": \"2021-11-02T12:58:51\", \"end_time\": \"2021-11-02T13:58:51\"}, {\"_id\": \"657a5b80decf2ffc6c13cea8\", \"start_time\": \"2023-12-13T20:33:30\", \"end_time\": \"2023-12-13T20:33:51\"}, {\"_id\": \"657a5bf3decf2ffc6c13cea9\", \"start_time\": \"2023-12-13T20:35:33\", \"end_time\": \"2023-12-13T20:35:46\"}, {\"_id\": \"657a5bf8decf2ffc6c13ceaa\", \"start_time\": \"2023-12-13T20:35:49\", \"end_time\": \"2023-12-13T20:35:51\"}, {\"_id\": \"657a5c27decf2ffc6c13ceab\", \"start_time\": \"2023-12-13T20:36:07\", \"end_time\": \"2023-12-13T20:36:39\"}, {\"_id\": \"657a5c75decf2ffc6c13ceac\", \"start_time\": \"2023-12-13T20:37:26\", \"end_time\": \"2023-12-13T20:37:56\"}, {\"_id\": \"657a5ceddecf2ffc6c13cead\", \"start_time\": \"2023-12-13T20:39:55\", \"end_time\": \"2023-12-13T20:39:55\"}, {\"_id\": \"657a5d0bdecf2ffc6c13ceae\", \"start_time\": \"2023-12-13T20:40:11\", \"end_time\": \"2023-12-13T20:40:26\"}, {\"_id\": \"657a5f7ddecf2ffc6c13ceaf\", \"start_time\": \"2023-12-13T20:40:29\", \"end_time\": \"2023-12-13T20:50:51\"}, {\"_id\": \"657a60dcdecf2ffc6c13ceb0\", \"start_time\": \"2023-12-13T20:51:09\", \"end_time\": \"2023-12-13T20:56:42\"}, {\"_id\": \"657a60e3decf2ffc6c13ceb1\", \"start_time\": \"2023-12-13T20:56:47\", \"end_time\": \"2023-12-13T20:56:49\"}, {\"_id\": \"657a60ebdecf2ffc6c13ceb2\", \"start_time\": \"2023-12-13T20:56:53\", \"end_time\": \"2023-12-13T20:56:57\"}, {\"_id\": \"657a60f1decf2ffc6c13ceb3\", \"start_time\": \"2023-12-13T20:57:01\", \"end_time\": \"2023-12-13T20:57:03\"}, {\"_id\": \"657a636adecf2ffc6c13ceb4\", \"start_time\": \"2023-12-13T20:58:30\", \"end_time\": \"2023-12-13T21:07:34\"}, {\"_id\": \"657a6e4cdecf2ffc6c13ceb5\", \"start_time\": \"2023-12-13T21:54:03\", \"end_time\": \"2023-12-13T21:54:04\"}, {\"_id\": \"657a6ebadecf2ffc6c13ceb6\", \"start_time\": \"2023-12-13T21:55:53\", \"end_time\": \"2023-12-13T21:55:53\"}, {\"_id\": \"657a707fdecf2ffc6c13ceb7\", \"start_time\": \"2023-12-13T21:58:47\", \"end_time\": \"2023-12-13T22:03:26\"}, {\"_id\": \"657a70bedecf2ffc6c13ceb8\", \"start_time\": \"2023-12-13T22:04:29\", \"end_time\": \"2023-12-13T22:04:29\"}, {\"_id\": \"657a70d2decf2ffc6c13ceb9\", \"start_time\": \"2023-12-13T22:04:40\", \"end_time\": \"2023-12-13T22:04:49\"}, {\"_id\": \"657a70efdecf2ffc6c13ceba\", \"start_time\": \"2023-12-13T22:05:13\", \"end_time\": \"2023-12-13T22:05:18\"}, {\"_id\": \"657a70f7decf2ffc6c13cebb\", \"start_time\": \"2023-12-13T22:05:20\", \"end_time\": \"2023-12-13T22:05:26\"}, {\"_id\": \"657a7100decf2ffc6c13cebc\", \"start_time\": \"2023-12-13T22:05:30\", \"end_time\": \"2023-12-13T22:05:35\"}, {\"_id\": \"657a75a8decf2ffc6c13cebd\", \"start_time\": \"2023-12-13T22:25:27\", \"end_time\": \"2023-12-13T22:25:27\"}, {\"_id\": \"657a7605decf2ffc6c13cebe\", \"start_time\": \"2023-12-13T22:26:34\", \"end_time\": \"2023-12-13T22:27:00\"}, {\"_id\": \"657a76fadecf2ffc6c13cebf\", \"start_time\": \"2023-12-13T22:30:44\", \"end_time\": \"2023-12-13T22:31:04\"}, {\"_id\": \"657e851dd90a1f49b87f0252\", \"start_time\": \"2023-12-13T08:58:51\", \"end_time\": \"2023-12-13T12:58:51\"}]"
+
+        // var sittingPeriods = JSON.parse(jsonstring);
+
+        var sittingPeriods = JSON.parse({{ data | tojson }});
+
+        sittingPeriods.sort((a,b)=>{
+            return a.start_time.localeCompare(b.start_time);
+        })
+
+        drawdata();
+
+        
+    </script>
+</body>
+</html> -->
+
+
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sitting Chart</title>
+    <script src="https://d3js.org/d3.v5.min.js"></script>
+</head>
+<body>
+    <p id="displaydata">Current date: 2023-12-13</p>
+    <input type="date" id="datepick" name="datepick" style="margin-bottom: 15px;" onchange={handledate(this.value)}>
+    <button onclick={handlerate(4)} >second</button>
+    <button onclick={handlerate(48)}>minute</button>
+    <button onclick={handlerate(144)}>hour</button>
+    <button onclick={handlerate(240)}>day</button>
+    <br>
+    <canvas id="sittingChart" width="21600" height="100" style="border:1px solid #000; margin-right:15px"></canvas>
+    <br>
+    <svg id = "pi-char" width="200" style="margin-top: 15px; margin-left: 15px" height="200"></svg>
+
+
+    <script>
+        var chooseDate = '2023-12-13'
+        var canvas = document.getElementById("sittingChart");
+        var ctx = canvas.getContext("2d");
+        var widthday = 1;
+        var truepos = 20;
+        var falsepos = 70;
+
+        var rate = 4;
+
+        const time2ind = (e) => {
+            var hour = parseInt(e.substring(0,2))
+            var min = parseInt(e.substring(3,5))
+            var sec = parseInt(e.substring(6,8))
+            console.log(hour,min,sec)
+
+            return (hour*3600+min*60+sec)/rate
+        }
+
+        const drawaxissec = () => {
+            for (ind=0; ind<21600; ind+=900){
+                ctx.beginPath();
+                ctx.moveTo(ind, 95);
+                ctx.lineTo(ind, 100);
+                ctx.stroke();
+                ctx.font = "15px Arial";
+                ctx.fillText((ind/900).toString(), ind, 90);
+            }
+        }
+        const drawaxismin = () => {
+            for (ind=0; ind<1800; ind+=75){
+                ctx.beginPath();
+                ctx.moveTo(ind, 95);
+                ctx.lineTo(ind, 100);
+                ctx.stroke();
+                ctx.font = "15px Arial";
+                ctx.fillText((ind/75).toString(), ind, 90);
+            }
+        }
+        const drawaxishour = () => {
+            for (ind=0; ind<600; ind+=25){
+                ctx.beginPath();
+                ctx.moveTo(ind, 95);
+                ctx.lineTo(ind, 100);
+                ctx.stroke();
+                ctx.font = "15px Arial";
+                ctx.fillText((ind/25).toString(), ind, 90);
+            }
+
+        }
+        const drawaxisday=() => {
+            var morning = 8;
+            var noon = 12;
+            var evening = 19;
+            var night = 21;
+            ctx.beginPath();
+            ctx.moveTo(morning*15, 95);
+            ctx.lineTo(morning*15, 100);
+            ctx.moveTo(noon*15, 95);
+            ctx.lineTo(noon*15, 100);
+            ctx.moveTo(evening*15, 95);
+            ctx.lineTo(evening*15, 100);
+            ctx.moveTo(night*15, 95);
+            ctx.lineTo(night*15, 100);
+            ctx.stroke();
+            ctx.font = "13px Arial";
+            ctx.fillText('morning', morning*15, 90);
+            ctx.fillText('noon', noon*15, 90);
+            ctx.fillText('evening', evening*15-20, 90);
+            ctx.fillText('night', night*15, 90);
+        }
+        const drawdata = () =>{
+            ctx.clearRect(2,truepos-5,canvas.width-4, canvas.height-truepos+10);
+            canvas.width = 21600*4/rate+2;
+            d3.select("#pi-char").selectAll("*").remove();
+            var svg= d3.select("#pi-char")
+            var sitpi = 0;
+
+            var lasttime = 0;
+            sittingPeriods.forEach((e,i) => {
+                var date = e.end_time.substring(0,10);
+                if(date===chooseDate){
+                    var start = e.start_time.substring(11,19)
+                    var end = e.end_time.substring(11,19)
+                    var startind = time2ind(start)
+                    var endind = time2ind(end)
+                    sitpi += endind-startind;
+                    if(startind>lasttime){
+                        ctx.beginPath();
+                        ctx.moveTo(lasttime, falsepos);
+                        ctx.lineTo(startind, falsepos);
+                        ctx.lineTo(startind, truepos);
+                        ctx.lineTo(endind, truepos);
+                        ctx.lineTo(endind, falsepos)
+                        ctx.stroke();
+                        lasttime = endind;
+                    }
+                }
+            });
+            ctx.beginPath();
+            ctx.moveTo(lasttime, truepos);
+            ctx.lineTo(lasttime, falsepos)
+            ctx.lineTo(21600*4/rate, falsepos);
+            ctx.stroke();
+            
+            console.log(sitpi)
+            sitpi /= 21600*4/rate;
+            pidata = [['sit',sitpi*100], ['stand',100-sitpi*100]]
+
+            var pie = d3.pie().sort(null).value((d)=>{
+                return d[1]
+            })
+            var pieall = pie(pidata)
+            console.log(pieall)
+
+            var outerRadius = 200/ 2;
+            var innerRadius = 80;
+            var arc = d3.arc()
+            .outerRadius(outerRadius)
+            .innerRadius(innerRadius);
+
+            var arcs = svg.selectAll('g')
+              .data(pieall)
+              .enter()
+              .append('g')
+              .attr('transform', 'translate(' + 200 / 2 + ',' + 200 / 2 + ')');
+    
+            var colors = ['red', 'blue'];
+            arcs.append('path')
+                .attr('fill', function(d, i){
+                return colors[i];
+                })
+                .attr('d', function(d){
+                return arc(d);
+                });
+
+            svg.append("rect")  //添加一个矩形
+            .attr("x",60)
+            .attr("y",70)
+            .attr("width",20)
+            .attr("height",20)
+            .attr("fill","red")
+
+            svg.append("rect")  //添加一个矩形
+            .attr("x",60)
+            .attr("y",110)
+            .attr("width",20)
+            .attr("height",20)
+            .attr("fill","blue")
+
+            svg.append('text')
+            .attr("x",90)
+            .attr("y",85)
+            .style('font-weight', 10)
+            .style('font-family', 'Arial')
+            .text("Sitting")
+
+            svg.append('text')
+            .attr("x",90)
+            .attr("y",125)
+            .style('font-weight', 10)
+            .style('font-family', 'Arial')
+            .text("Standing")
+
+            switch(rate){
+                case 4: drawaxissec();break;
+                case 48: drawaxismin();break;
+                case 144: drawaxishour();break;
+                case 240: drawaxisday();break;
+            }
+
+        }
+
+        function handledate(e){
+            chooseDate = e.toString();
+            document.getElementById("displaydata").innerText = "Current date: " + chooseDate;
+            drawdata();
+        }
+
+        function handlerate(e){
+            rate = e;
+            drawdata();
+        }
+
+        // var jsonstring = "[{\"_id\": \"657284f46f04c0c1832c0215\", \"start_time\": \"2023-11-02T08:58:51\", \"end_time\": \"2023-11-02T10:58:51\"}, {\"_id\": \"6572851a6f04c0c1832c0216\", \"start_time\": \"2023-11-02T18:58:51\", \"end_time\": \"2023-11-02T20:58:51\"}, {\"_id\": \"657288cb6f04c0c1832c0217\", \"start_time\": \"2023-11-02T12:58:51\", \"end_time\": \"2023-11-02T13:58:51\"}, {\"_id\": \"657290986f04c0c1832c0218\", \"start_time\": \"2022-11-02T12:58:51\", \"end_time\": \"2022-11-02T13:58:51\"}, {\"_id\": \"657342f86f04c0c1832c0219\", \"start_time\": \"2021-11-02T12:58:51\", \"end_time\": \"2021-11-02T13:58:51\"}, {\"_id\": \"657a5b80decf2ffc6c13cea8\", \"start_time\": \"2023-12-13T20:33:30\", \"end_time\": \"2023-12-13T20:33:51\"}, {\"_id\": \"657a5bf3decf2ffc6c13cea9\", \"start_time\": \"2023-12-13T20:35:33\", \"end_time\": \"2023-12-13T20:35:46\"}, {\"_id\": \"657a5bf8decf2ffc6c13ceaa\", \"start_time\": \"2023-12-13T20:35:49\", \"end_time\": \"2023-12-13T20:35:51\"}, {\"_id\": \"657a5c27decf2ffc6c13ceab\", \"start_time\": \"2023-12-13T20:36:07\", \"end_time\": \"2023-12-13T20:36:39\"}, {\"_id\": \"657a5c75decf2ffc6c13ceac\", \"start_time\": \"2023-12-13T20:37:26\", \"end_time\": \"2023-12-13T20:37:56\"}, {\"_id\": \"657a5ceddecf2ffc6c13cead\", \"start_time\": \"2023-12-13T20:39:55\", \"end_time\": \"2023-12-13T20:39:55\"}, {\"_id\": \"657a5d0bdecf2ffc6c13ceae\", \"start_time\": \"2023-12-13T20:40:11\", \"end_time\": \"2023-12-13T20:40:26\"}, {\"_id\": \"657a5f7ddecf2ffc6c13ceaf\", \"start_time\": \"2023-12-13T20:40:29\", \"end_time\": \"2023-12-13T20:50:51\"}, {\"_id\": \"657a60dcdecf2ffc6c13ceb0\", \"start_time\": \"2023-12-13T20:51:09\", \"end_time\": \"2023-12-13T20:56:42\"}, {\"_id\": \"657a60e3decf2ffc6c13ceb1\", \"start_time\": \"2023-12-13T20:56:47\", \"end_time\": \"2023-12-13T20:56:49\"}, {\"_id\": \"657a60ebdecf2ffc6c13ceb2\", \"start_time\": \"2023-12-13T20:56:53\", \"end_time\": \"2023-12-13T20:56:57\"}, {\"_id\": \"657a60f1decf2ffc6c13ceb3\", \"start_time\": \"2023-12-13T20:57:01\", \"end_time\": \"2023-12-13T20:57:03\"}, {\"_id\": \"657a636adecf2ffc6c13ceb4\", \"start_time\": \"2023-12-13T20:58:30\", \"end_time\": \"2023-12-13T21:07:34\"}, {\"_id\": \"657a6e4cdecf2ffc6c13ceb5\", \"start_time\": \"2023-12-13T21:54:03\", \"end_time\": \"2023-12-13T21:54:04\"}, {\"_id\": \"657a6ebadecf2ffc6c13ceb6\", \"start_time\": \"2023-12-13T21:55:53\", \"end_time\": \"2023-12-13T21:55:53\"}, {\"_id\": \"657a707fdecf2ffc6c13ceb7\", \"start_time\": \"2023-12-13T21:58:47\", \"end_time\": \"2023-12-13T22:03:26\"}, {\"_id\": \"657a70bedecf2ffc6c13ceb8\", \"start_time\": \"2023-12-13T22:04:29\", \"end_time\": \"2023-12-13T22:04:29\"}, {\"_id\": \"657a70d2decf2ffc6c13ceb9\", \"start_time\": \"2023-12-13T22:04:40\", \"end_time\": \"2023-12-13T22:04:49\"}, {\"_id\": \"657a70efdecf2ffc6c13ceba\", \"start_time\": \"2023-12-13T22:05:13\", \"end_time\": \"2023-12-13T22:05:18\"}, {\"_id\": \"657a70f7decf2ffc6c13cebb\", \"start_time\": \"2023-12-13T22:05:20\", \"end_time\": \"2023-12-13T22:05:26\"}, {\"_id\": \"657a7100decf2ffc6c13cebc\", \"start_time\": \"2023-12-13T22:05:30\", \"end_time\": \"2023-12-13T22:05:35\"}, {\"_id\": \"657a75a8decf2ffc6c13cebd\", \"start_time\": \"2023-12-13T22:25:27\", \"end_time\": \"2023-12-13T22:25:27\"}, {\"_id\": \"657a7605decf2ffc6c13cebe\", \"start_time\": \"2023-12-13T22:26:34\", \"end_time\": \"2023-12-13T22:27:00\"}, {\"_id\": \"657a76fadecf2ffc6c13cebf\", \"start_time\": \"2023-12-13T22:30:44\", \"end_time\": \"2023-12-13T22:31:04\"}, {\"_id\": \"657e851dd90a1f49b87f0252\", \"start_time\": \"2023-12-13T08:58:51\", \"end_time\": \"2023-12-13T12:58:51\"}]"
+
+        // var sittingPeriods = JSON.parse(jsonstring);
 
         var sittingPeriods = JSON.parse({{ data | tojson }});
 

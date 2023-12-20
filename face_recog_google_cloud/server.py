@@ -126,7 +126,7 @@ while True:
         print("===")
     except Exception as e:
         print(e)
-        connectionSocket2.close()
-        print("The server is ready to receive")
-        connectionSocket2, clientAddress = serverSocket2.accept()
-        print("Connection established with ", clientAddress)
+        # connectionSocket2.close()
+        # print("The server is ready to receive")
+        # connectionSocket2, clientAddress = serverSocket2.accept()
+        # print("Connection established with ", clientAddress)

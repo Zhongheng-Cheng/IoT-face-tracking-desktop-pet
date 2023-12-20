@@ -5,6 +5,7 @@ from rtc_clock import RTC_Clock
 from finite_state_machine import FiniteStateMachine
 from button import Button
 from server import Server
+from sensors import InfraredSensor
 import usocket
 import utime
 from urequests import post
@@ -109,6 +110,7 @@ if __name__ == '__main__':
     
     fsm = FiniteStateMachine()
     button = Button(pin=0, release=button_short)
+    ir = InfraredSensor(pin=13)
     
     print("Initializing server on chip...")
     server = Server()
@@ -121,52 +123,59 @@ if __name__ == '__main__':
 
     voice_message = ''
 
+    # clear unused buffer
+    center = nc.clientSocket.recv(2048)
+
     # main working logic
     while True:
         content = make_display_content(fsm.current_state)
         screen.show_text(content)
-        if fsm.current_state == "MAIN" or fsm.current_state == "SHOW_QUOTE":
-            time_text = ":".join([str(i) for i in clock.get_now_time()])
-            # read and process face tracking data
-            try:
-                # get face position data
-                center = nc.clientSocket.recv(2)
-                center_x = int(center[0])
-                center_y = int(center[1])
-                print(f"location: ({center_x}, {center_y})")
+        if ir.is_detect():
+            if fsm.current_state == "MAIN" or fsm.current_state == "SHOW_QUOTE":
+                time_text = ":".join([str(i) for i in clock.get_now_time()])
+                # read and process face tracking data
+                try:
+                    # get face position data
+                    center = nc.clientSocket.recv(2)
+                    center_x = int(center[0])
+                    center_y = int(center[1])
+                    print(f"location: ({center_x}, {center_y})")
 
-                # adjust servos
-                trace_result = trace_center(center_x, center_y, threshold=30)
-                if trace_result:
-                    delta_degree_x, delta_degree_y = trace_result
-                    print(f'delta_degree: ({delta_degree_x}, {delta_degree_y})')
-                    buttom_servo.set_delta_degree(delta_degree_x)
-                    upper_servo.set_delta_degree(delta_degree_y)
-                    print(f"Buttom_servo degree: {buttom_servo.degree}")
-                    print(f'Upper_servo degree: {upper_servo.degree}')
-                    print()
+                    # adjust servos
+                    trace_result = trace_center(center_x, center_y, threshold=30)
+                    if trace_result:
+                        delta_degree_x, delta_degree_y = trace_result
+                        print(f'delta_degree: ({delta_degree_x}, {delta_degree_y})')
+                        buttom_servo.set_delta_degree(delta_degree_x)
+                        upper_servo.set_delta_degree(delta_degree_y)
+                        print(f"Buttom_servo degree: {buttom_servo.degree}")
+                        print(f'Upper_servo degree: {upper_servo.degree}')
+                        print()
 
-                    # check sitting state
-                    if upper_servo.degree < 130:
-                        if not is_sitting:
-                            is_sitting = True
-                            start_time = clock.get_now_iso_time()
-                            utime.sleep_ms(1)
-                    else:
-                        if is_sitting:
-                            is_sitting = False
-                            end_time = clock.get_now_iso_time()
+                        # check sitting state
+                        if upper_servo.degree < 130:
+                            if not is_sitting:
+                                is_sitting = True
+                                start_time = clock.get_now_iso_time()
+                                utime.sleep_ms(1)
+                        else:
+                            if is_sitting:
+                                is_sitting = False
+                                end_time = clock.get_now_iso_time()
 
-                            # send data to database
-                            post_sitting_data(start_time, end_time)
-                            utime.sleep_ms(1)
-                            
-            # except usocket.timeout:
-            #     pass
-            except Exception as e:
-                print(e)
-                nc = NetworkConn()
-                nc.connect_to_server(SERVER_IP, FACE_SERVER_PORT)
+                                # send data to database
+                                post_sitting_data(start_time, end_time)
+                                utime.sleep_ms(1)
+                                
+                # except usocket.timeout:
+                #     pass
+                except Exception as e:
+                    print(e)
+                    # nc = NetworkConn()
+                    # nc.connect_to_server(SERVER_IP, FACE_SERVER_PORT)
+        else:
+            center = nc.clientSocket.recv(2)
+            print("Not excuted: ", center)
         
         if fsm.current_state == "VOICE_RECOG":
             if voice_message != '':

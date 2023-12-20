@@ -7,12 +7,11 @@ import socket
 import camera
 import machine
 import time
-from sensors import InfraredSensor
 
 SSID = "Columbia University"         # Enter your WiFi name
 PASSWORD = ""    # Enter your WiFi password
 
-SERVER_IP = '34.123.196.184'
+SERVER_IP = '35.188.219.151'
 SERVER_PORT = 8011
 
 # Let ESP32 connect to wifi.

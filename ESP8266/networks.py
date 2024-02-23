@@ -4,14 +4,29 @@ from ujson import loads
 from os import listdir
 from socket import *
 
-# from requests import get
-# from json import loads
+def get_saved_wifi():
+    if "_wifi_info.py" in listdir():
+        import _wifi_info
+        wifi_list = _wifi_info.ssid_key_pairs
+    else:
+        ssid = input('ssid: ')
+        key = input('key: ')
+        wifi_list = [[ssid, key]]
+    return wifi_list
+
+def get_tokens():
+    try:
+        import _tokens
+        tokens = _tokens.tokens
+        return tokens
+    except:
+        raise NameError("No tokens file")
 
 class NetworkConn(object):
     def __init__(self):
         self.wlan = network.WLAN(network.STA_IF)
         self.wlan.active(True)
-        self.saved_wifi = self._get_saved_wifi()
+        self.saved_wifi = get_saved_wifi()
         self.nearby_wifi = [i[0].decode() for i in self.wlan.scan()]
         for i in self.saved_wifi:
             if i[0] in self.nearby_wifi:
@@ -20,16 +35,6 @@ class NetworkConn(object):
                     break
         assert self.wlan.isconnected()
         return
-
-    def _get_saved_wifi(self):
-        if "_wifi_info.py" in listdir():
-            import _wifi_info
-            wifi_list = _wifi_info.ssid_key_pairs
-        else:
-            ssid = input('ssid: ')
-            key = input('key: ')
-            wifi_list = [[ssid, key]]
-        return wifi_list
 
     def do_connect(self, ssid: str, key: str):
         time_count = 0
@@ -52,8 +57,9 @@ class NetworkConn(object):
 
 class API(object):
     def __init__(self):
-        self.weather_API_key = "f485ffaf9f59c68087e74f169c50068f"
-        self.quote_API_key = "eGE3BW/+7sbstu2WTj932A==LpbbfCm49dQxm9rf"
+        tokens = get_tokens()
+        self.weather_API_key = tokens["weather_API_key"]
+        self.quote_API_key = tokens["quote_API_key"]
         self.latitude = self.longitude = None
         return
 

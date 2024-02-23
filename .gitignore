@@ -7,6 +7,7 @@ mpfshell/
 *zc2737_ym2974_yx2821*
 *.csv
 _wifi_info.py
+_tokens.py
 firmware_test/
 LCD_Module_RPI_code/
 
